@@ -37,42 +37,38 @@
     std::deque<Move> _moveHistory;
 }
 -(void) init: (double) skill : (double) time;
-{
-    std::cout << "Stockfish engine init 1\n";
-    UCI::init(Options, skill, time);
-    std::cout << "Stockfish engine init 2\n";
-    PSQT::init();
-    std::cout << "Stockfish engine init 3\n";
-    Bitboards::init();
-    std::cout << "Stockfish engine init 4\n";
-    Position::init();
-    std::cout << "Stockfish engine init 5\n";
-    Bitbases::init(); //unable to figure out
-    std::cout << "Stockfish engine init 6\n";
-    Search::init(); //unable to figure out
-    std::cout << "Stockfish engine init 7\n";
+{    
+    UCI::init(Options, skill, time);    
+    PSQT::init();    
+    Bitboards::init();    
+    Position::init();    
+    Bitbases::init(); //unable to figure out    
+    Search::init(); //unable to figure out    
     Pawns::init(); //unable to figure out
-    std::cout << "Stockfish engine init 8\n";
-    Threads.set(Options["Threads"]);
-    std::cout << "Stockfish engine init 9\n";
+    if(!threadsIsInitialized){
+        Threads.set(Options["Threads"]);    
+        threadsIsInitialized = true;
+    }    
+    
     Search::clear(); // After threads are up
-    std::cout << "Stockfish engine init 10\n";
-
     UCI::init(_pos, _states);    
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
 }
 
 -(void) init: (double) skill : (double) time : (const char*) customFEN;
-{
-    UCI::init(Options, skill, time);
-    PSQT::init();
-    Bitboards::init();
-    Position::init();
-    Bitbases::init(); //unable to figure out
-    Search::init(); //unable to figure out
-    Pawns::init(); //unable to figure out
-    Threads.set(Options["Threads"]);
-    Search::clear(); // After threads are up
+{    
+    UCI::init(Options, skill, time);    
+    PSQT::init();    
+    Bitboards::init();    
+    Position::init();    
+    Bitbases::init(); //unable to figure out    
+    Search::init(); //unable to figure out    
+    Pawns::init(); //unable to figure out    
+    if(!threadsIsInitialized){
+        Threads.set(Options["Threads"]);    
+        threadsIsInitialized = true;
+    }     
+    Search::clear(); // After threads are up    
 
     UCI::init(_pos, _states, customFEN);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
@@ -153,6 +149,7 @@ extern "C"
     }*/
 
     static StockfishLib *ai = nil;
+    static bool threadsIsInitialized = false;
 
     static StockfishLib* get_ai()
     {

@@ -15,7 +15,7 @@
 #include "thread.h"
 #include "pawn.h"
 #include "psqt.h"
-
+static bool threadsIsInitialized = false;
 @interface StockfishLib : NSObject
 -(void) init: (double) skill : (double) time;
 -(void) init: (double) skill : (double) time : (const char*) customFEN;
@@ -149,7 +149,6 @@ extern "C"
     }*/
 
     static StockfishLib *ai = nil;
-    static bool threadsIsInitialized = false;
 
     static StockfishLib* get_ai()
     {

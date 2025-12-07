@@ -128,7 +128,7 @@
 {
     UCI::release_resources(_pos);
     // 2. Tear down worker threads: this is crucial
-    Threads.set(0);   // 0 threads → kill thread pool in Stockfish
+    //Threads.set(0);   // 0 threads → kill thread pool in Stockfish
     //g_stockfishInitialized = false;
     std::cout << "Stockfish engine shutdown complete\n";
 }

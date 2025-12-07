@@ -38,14 +38,14 @@ static bool threadsIsInitialized = false;
 }
 -(void) init: (double) skill : (double) time;
 {    
-    UCI::init(Options, skill, time);    
-    PSQT::init();    
-    Bitboards::init();    
-    Position::init();    
-    Bitbases::init(); //unable to figure out    
-    Search::init(); //unable to figure out    
-    Pawns::init(); //unable to figure out
-    if(!threadsIsInitialized){
+    UCI::init(Options, skill, time);   
+    if(!threadsIsInitialized){ 
+        PSQT::init();    
+        Bitboards::init();    
+        Position::init();    
+        Bitbases::init(); //unable to figure out    
+        Search::init(); //unable to figure out    
+        Pawns::init(); //unable to figure out    
         Threads.set(Options["Threads"]);    
         threadsIsInitialized = true;
     }    
@@ -57,18 +57,21 @@ static bool threadsIsInitialized = false;
 
 -(void) init: (double) skill : (double) time : (const char*) customFEN;
 {    
-    UCI::init(Options, skill, time);    
-    PSQT::init();    
-    Bitboards::init();    
-    Position::init();    
-    Bitbases::init(); //unable to figure out    
-    Search::init(); //unable to figure out    
-    Pawns::init(); //unable to figure out    
-    if(!threadsIsInitialized){
+    std::cout << "initing stockfish 1 : ";
+    UCI::init(Options, skill, time);
+    std::cout << "initing stockfish 2 : ";
+    if(!threadsIsInitialized){    
+        PSQT::init();    
+        Bitboards::init();    
+        Position::init();    
+        Bitbases::init(); //unable to figure out    
+        Search::init(); //unable to figure out    
+        Pawns::init(); //unable to figure out        
         Threads.set(Options["Threads"]);    
         threadsIsInitialized = true;
     }     
-    Search::clear(); // After threads are up    
+    Search::clear(); // After threads are up  
+    std::cout << "initing stockfish 3 : "  
 
     UCI::init(_pos, _states, customFEN);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";

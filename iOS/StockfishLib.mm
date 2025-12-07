@@ -126,7 +126,7 @@
 
 extern "C"
 {
-    StockfishLib *ai = [[StockfishLib alloc] init];
+    /*StockfishLib *ai = [[StockfishLib alloc] init];
 
     void cpp_init_stockfish(double skill, double time)
     {
@@ -136,6 +136,45 @@ extern "C"
     void cpp_init_custom_stockfish(double skill, double time, const char* customFEN)
     {
         [ai init:skill :time :customFEN];
+    }*/
+
+    static StockfishLib *ai = nil;
+
+    static StockfishLib* get_ai()
+    {
+        if (!ai)
+        {
+            ai = [[StockfishLib alloc] init];
+        }
+        return ai;
+    }
+
+    void cpp_init_stockfish(double skill, double time)
+    {
+        [get_ai() init:skill :time];
+    }
+
+    void cpp_init_custom_stockfish(double skill, double time, const char* customFEN)
+    {
+        [get_ai() init:skill :time :customFEN];
+    }
+
+    // ... other functions using get_ai()
+
+    void cpp_release_resource()
+    {
+        if (!ai) return;
+
+        [ai releaseResource];   // shuts down Stockfish internals
+    }
+
+    // Optional: fully drop the Objective-C instance too
+    void cpp_dealloc_stockfish()
+    {
+        if (!ai) return;
+
+        [ai releaseResource];   // stop engine, kill threads
+        ai = nil;               // ARC will release if no other strong refs
     }
 
     void cpp_set_position(std::string fen)

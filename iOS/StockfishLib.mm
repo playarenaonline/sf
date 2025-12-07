@@ -71,7 +71,7 @@ static bool threadsIsInitialized = false;
         threadsIsInitialized = true;
     }     
     Search::clear(); // After threads are up  
-    std::cout << "initing stockfish 3 : "  
+    std::cout << "initing stockfish 3 : ";  
 
     UCI::init(_pos, _states, customFEN);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";

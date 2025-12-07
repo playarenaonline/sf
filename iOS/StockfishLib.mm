@@ -224,8 +224,8 @@ extern "C"
         return draw;
     }
 
-    void cpp_release_resource()
+    /*void cpp_release_resource()
     {
         [ai releaseResource];
-    }
+    }*/
 }

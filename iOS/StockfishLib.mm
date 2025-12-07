@@ -38,17 +38,27 @@
 }
 -(void) init: (double) skill : (double) time;
 {
+    std::cout << "Stockfish engine init 1\n";
     UCI::init(Options, skill, time);
+    std::cout << "Stockfish engine init 2\n";
     PSQT::init();
+    std::cout << "Stockfish engine init 3\n";
     Bitboards::init();
+    std::cout << "Stockfish engine init 4\n";
     Position::init();
+    std::cout << "Stockfish engine init 5\n";
     Bitbases::init(); //unable to figure out
+    std::cout << "Stockfish engine init 6\n";
     Search::init(); //unable to figure out
+    std::cout << "Stockfish engine init 7\n";
     Pawns::init(); //unable to figure out
+    std::cout << "Stockfish engine init 8\n";
     Threads.set(Options["Threads"]);
+    std::cout << "Stockfish engine init 9\n";
     Search::clear(); // After threads are up
+    std::cout << "Stockfish engine init 10\n";
 
-    UCI::init(_pos, _states);
+    UCI::init(_pos, _states);    
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
 }
 

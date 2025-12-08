@@ -69,8 +69,7 @@ static bool threadsIsInitialized = false;
         std::cout << "initing stockfish 7 : ";  
         Pawns::init(); //unable to figure out
         std::cout << "initing stockfish 8 : ";          
-        Threads.set(Options["Threads"]);    
-    UCI::clear();   
+        Threads.set(Options["Threads"]);     
         std::cout << "initing stockfish 9 : ";          
 
     Search::clear(); // After threads are up  

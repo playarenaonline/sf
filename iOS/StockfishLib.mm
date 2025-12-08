@@ -132,7 +132,7 @@ static bool threadsIsInitialized = false;
 -(void) releaseResource
 {
     UCI::release_resources(_pos);
-    Threads::clear();
+    Threads.clear();
     // 2. Tear down worker threads: this is crucial
     //Threads.set(0);   // 0 threads → kill thread pool in Stockfish
     //g_stockfishInitialized = false;

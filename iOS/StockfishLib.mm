@@ -170,37 +170,37 @@ extern "C"
 
     void cpp_init_stockfish(double skill, double time)
     {
-        [[get_ai() init:skill :time];
+        [get_ai() init:skill :time];
     }
 
     void cpp_init_custom_stockfish(double skill, double time, const char* customFEN)
     {
-        [[get_ai() init:skill :time :customFEN];
+        [get_ai() init:skill :time :customFEN];
     }
 
     void cpp_set_position(const char* fen)
     {
-        [[get_ai() setPosition:fen];
+        [get_ai() setPosition:fen];
     }
 
     void cpp_call_move(int from, int to)
     {
-        [[get_ai() callMove:from :to];
+        [get_ai() callMove:from :to];
     }
 
     void cpp_castle_move(int castleSide)
     {
-        [[get_ai() castleMove:castleSide];
+        [get_ai() castleMove:castleSide];
     }
 
     void cpp_enpassant_move(int from)
     {
-        [[get_ai() enpassantMove:from];
+        [get_ai() enpassantMove:from];
     }
 
     void cpp_promotion_move(int from, int to, int promoType)
     {
-        [[get_ai() promotionMove:from :to :promoType];
+        [get_ai() promotionMove:from :to :promoType];
     }
 
     int cpp_search_move()

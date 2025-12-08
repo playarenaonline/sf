@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <iostream>
+
 #include "Bitboard.h"
 #include "Position.h"
 #include "search.h"
@@ -15,233 +16,223 @@
 #include "thread.h"
 #include "pawn.h"
 #include "psqt.h"
-static bool threadsIsInitialized = false;
+
+// One-time flags for this process
+static bool gEngineInitialized  = false;
+static bool gThreadsInitialized = false;
+
 @interface StockfishLib : NSObject
--(void) init: (double) skill : (double) time;
--(void) init: (double) skill : (double) time : (const char*) customFEN;
--(void) setPosition : (const char*) fen;
--(void) callMove: (int) from : (int) to;
--(void) castleMove: (int) castleSide;
--(void) enpassantMove: (int) from;
--(void) promotionMove: (int) from : (int) to : (int) promoType;
--(int) searchMove;
--(void) undoMove;
--(void) newGame;
--(bool) drawCheck;
--(void) releaseResource;
+- (void)initEngineIfNeeded:(double)skill :(double)time;
+- (void)init:(double)skill :(double)time;
+- (void)init:(double)skill :(double)time :(const char*)customFEN;
+- (void)setPosition:(const char*)fen;
+- (void)callMove:(int)from :(int)to;
+- (void)castleMove:(int)castleSide;
+- (void)enpassantMove:(int)from;
+- (void)promotionMove:(int)from :(int)to :(int)promoType;
+- (int)searchMove;
+- (void)undoMove;
+- (void)newGame;
+- (bool)drawCheck;
+- (void)releaseResource;
 @end
 
 @implementation StockfishLib {
-    Position _pos;
-    StateListPtr _states;
+    Position        _pos;
+    StateListPtr    _states;
     std::deque<Move> _moveHistory;
-}
--(void) init: (double) skill : (double) time;
-{    
-    UCI::init(Options, skill, time);   
-        PSQT::init();    
-        Bitboards::init();    
-        Position::init();    
-        Bitbases::init(); //unable to figure out    
-        Search::init(); //unable to figure out    
-        Pawns::init(); //unable to figure out    
-        Threads.set(Options["Threads"]);    
-    
-    Search::clear(); // After threads are up
-    UCI::init(_pos, _states);    
-    std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
+    double          _skill;
+    double          _time;
 }
 
--(void) init: (double) skill : (double) time : (const char*) customFEN;
-{    
-    std::cout << "initing stockfish 1 : ";
-    UCI::init(Options, skill, time);
-    std::cout << "initing stockfish 2 : ";  
-        PSQT::init();   
-        std::cout << "initing stockfish 3 : ";   
-        Bitboards::init();    
-        std::cout << "initing stockfish 4 : ";   
-        Position::init();    
-        std::cout << "initing stockfish 5 : ";  
-        Bitbases::init(); //unable to figure out    
-        std::cout << "initing stockfish 6 : ";  
-        Search::init(); //unable to figure out  
-        std::cout << "initing stockfish 7 : ";  
-        Pawns::init(); //unable to figure out
-        std::cout << "initing stockfish 8 : ";          
-        Threads.set(Options["Threads"]);     
-        std::cout << "initing stockfish 9 : ";          
+- (void)initEngineIfNeeded:(double)skill :(double)time
+{
+    if (!gEngineInitialized)
+    {
+        // One-time global engine init (Stockfish bootstrap)
+        UCI::init(Options, skill, time);
+        PSQT::init();
+        Bitboards::init();
+        Position::init();
+        Bitbases::init();
+        Search::init();
+        Pawns::init();
 
-    Search::clear(); // After threads are up  
-    std::cout << "initing stockfish 10 : ";  
+        if (!gThreadsInitialized)
+        {
+            Threads.set(Options["Threads"]);   // OR hardcode 1/2 threads if you prefer
+            gThreadsInitialized = true;
+        }
 
+        Search::clear(); // after threads are up
+
+        gEngineInitialized = true;
+        std::cout << "Stockfish global init done\n";
+    }
+}
+
+- (void)init:(double)skill :(double)time
+{
+    [self initEngineIfNeeded:skill :time];
+
+    _skill = skill;
+    _time  = time;
+
+    // Default starting position
+    UCI::init(_pos, _states);
+    std::cout << "Stockfish position init (default) skill=" << skill
+              << " time=" << time << "\n";
+}
+
+- (void)init:(double)skill :(double)time :(const char*)customFEN
+{
+    [self initEngineIfNeeded:skill :time];
+
+    _skill = skill;
+    _time  = time;
+
+    // Custom starting FEN (puzzles, saved game)
     UCI::init(_pos, _states, customFEN);
-    std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
+    std::cout << "Stockfish position init (FEN) skill=" << skill
+              << " time=" << time << " fen=" << (customFEN ? customFEN : "NULL") << "\n";
 }
 
-//didn't use, might not be able to use this raw
--(void) setPosition : (const char*) fen
+- (void)setPosition:(const char*)fen
 {
     UCI::set_position(_pos, _states, fen);
 }
 
--(void) callMove: (int) from : (int) to
+- (void)callMove:(int)from :(int)to
 {
     UCI::init_move(from, to, _pos, _moveHistory);
 }
 
--(void) castleMove: (int) castleSide
+- (void)castleMove:(int)castleSide
 {
     UCI::castle_move(castleSide, _pos, _moveHistory);
 }
 
--(void) enpassantMove: (int) from
+- (void)enpassantMove:(int)from
 {
     UCI::enpassant_move(from, _pos, _moveHistory);
 }
 
-//promoType limited to 2 = Knight ~ 5 = Queen
--(void) promotionMove: (int) from : (int) to : (int) promoType
+- (void)promotionMove:(int)from :(int)to :(int)promoType
 {
     UCI::promotion_move(from, to, promoType, _pos, _moveHistory);
 }
 
--(int) searchMove
+- (int)searchMove
 {
+    // For now we just reuse the existing think wrapper.
+    // If you want difficulty to really matter, you can
+    // modify UCI::think to accept limits based on _skill/_time.
     Move m = UCI::think(_pos, _moveHistory);
-
-    return (m);
+    return (int)m;
 }
 
--(void) undoMove
+- (void)undoMove
 {
     UCI::undo_move(_pos, _moveHistory);
 }
 
--(void) newGame
+- (void)newGame
 {
     UCI::new_game(_pos, _states, _moveHistory);
 }
 
--(bool) drawCheck
+- (bool)drawCheck
 {
-    bool draw = UCI::is_game_draw(_pos);
-    return draw;
+    return UCI::is_game_draw(_pos);
 }
 
--(void) releaseResource
+- (void)releaseResource
 {
+    // Currently just releases resources related to _pos.
+    // We deliberately DO NOT tear down Threads or global init
+    // because Stockfish is not designed for repeated full teardown.
     UCI::release_resources(_pos);
-    Threads.clear();
-    // 2. Tear down worker threads: this is crucial
-    //Threads.set(0);   // 0 threads → kill thread pool in Stockfish
-    //g_stockfishInitialized = false;
-    std::cout << "Stockfish engine shutdown complete\n";
+    std::cout << "Stockfish position resources released\n";
 }
+
 @end
 
 extern "C"
 {
-    /*StockfishLib *ai = [[StockfishLib alloc] init];
-
-    void cpp_init_stockfish(double skill, double time)
-    {
-        [ai init:skill :time];
-    }
-
-    void cpp_init_custom_stockfish(double skill, double time, const char* customFEN)
-    {
-        [ai init:skill :time :customFEN];
-    }*/
-
     static StockfishLib *ai = nil;
 
     static StockfishLib* get_ai()
     {
         if (!ai)
-        {
             ai = [[StockfishLib alloc] init];
-        }
         return ai;
     }
 
     void cpp_init_stockfish(double skill, double time)
     {
-        [get_ai() init:skill :time];
+        [[get_ai() init:skill :time];
     }
 
     void cpp_init_custom_stockfish(double skill, double time, const char* customFEN)
     {
-        [get_ai() init:skill :time :customFEN];
+        [[get_ai() init:skill :time :customFEN];
     }
 
-    // ... other functions using get_ai()
-
-    void cpp_release_resource()
+    void cpp_set_position(const char* fen)
     {
-        if (!ai) return;
-
-        [ai releaseResource];   // shuts down Stockfish internals
-    }
-
-    // Optional: fully drop the Objective-C instance too
-    void cpp_dealloc_stockfish()
-    {
-        if (!ai) return;
-
-        [ai releaseResource];   // stop engine, kill threads
-        ai = nil;               // ARC will release if no other strong refs
-    }
-
-    void cpp_set_position(std::string fen)
-    {
-        [ai setPosition:fen.c_str()];
+        [[get_ai() setPosition:fen];
     }
 
     void cpp_call_move(int from, int to)
     {
-        [ai callMove:from :to];
+        [[get_ai() callMove:from :to];
     }
 
     void cpp_castle_move(int castleSide)
     {
-        [ai castleMove:castleSide];
+        [[get_ai() castleMove:castleSide];
     }
 
     void cpp_enpassant_move(int from)
     {
-        [ai enpassantMove:from];
+        [[get_ai() enpassantMove:from];
     }
 
     void cpp_promotion_move(int from, int to, int promoType)
     {
-        [ai promotionMove:from :to :promoType];
+        [[get_ai() promotionMove:from :to :promoType];
     }
 
     int cpp_search_move()
     {
-        int m = [ai searchMove];
-        return m;
+        return [get_ai() searchMove];
     }
 
     void cpp_undo_move()
     {
-        [ai undoMove];
+        [get_ai() undoMove];
     }
 
     void cpp_new_game()
     {
-        [ai newGame];
+        [get_ai() newGame];
     }
 
     bool cpp_draw_check()
     {
-        bool draw = [ai drawCheck];
-        return draw;
+        return [get_ai() drawCheck];
     }
 
-    /*void cpp_release_resource()
+    void cpp_release_resource()
     {
+        if (!ai) return;
         [ai releaseResource];
-    }*/
+    }
+
+    void cpp_dealloc_stockfish()
+    {
+        if (!ai) return;
+        [ai releaseResource];  // position-level cleanup
+        ai = nil;              // drop wrapper; engine globals stay initialized
+    }
 }

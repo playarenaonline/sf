@@ -39,7 +39,6 @@ static bool threadsIsInitialized = false;
 -(void) init: (double) skill : (double) time;
 {    
     UCI::init(Options, skill, time);   
-    if(!threadsIsInitialized){ 
         PSQT::init();    
         Bitboards::init();    
         Position::init();    
@@ -47,8 +46,6 @@ static bool threadsIsInitialized = false;
         Search::init(); //unable to figure out    
         Pawns::init(); //unable to figure out    
         Threads.set(Options["Threads"]);    
-        threadsIsInitialized = true;
-    }    
     
     Search::clear(); // After threads are up
     UCI::init(_pos, _states);    
@@ -59,20 +56,25 @@ static bool threadsIsInitialized = false;
 {    
     std::cout << "initing stockfish 1 : ";
     UCI::init(Options, skill, time);
-    std::cout << "initing stockfish 2 : ";
-    if(!threadsIsInitialized){    
-        PSQT::init();    
+    std::cout << "initing stockfish 2 : ";  
+        PSQT::init();   
+        std::cout << "initing stockfish 3 : ";   
         Bitboards::init();    
+        std::cout << "initing stockfish 4 : ";   
         Position::init();    
+        std::cout << "initing stockfish 5 : ";  
         Bitbases::init(); //unable to figure out    
-        Search::init(); //unable to figure out    
-        Pawns::init(); //unable to figure out        
+        std::cout << "initing stockfish 6 : ";  
+        Search::init(); //unable to figure out  
+        std::cout << "initing stockfish 7 : ";  
+        Pawns::init(); //unable to figure out
+        std::cout << "initing stockfish 8 : ";          
         Threads.set(Options["Threads"]);    
-        threadsIsInitialized = true;
-    }  
     UCI::clear();   
+        std::cout << "initing stockfish 9 : ";          
+
     Search::clear(); // After threads are up  
-    std::cout << "initing stockfish 3 : ";  
+    std::cout << "initing stockfish 10 : ";  
 
     UCI::init(_pos, _states, customFEN);
     std::cout << "created stockfish instance skill : " << skill << " time : " << time << "\n";
@@ -131,6 +133,7 @@ static bool threadsIsInitialized = false;
 -(void) releaseResource
 {
     UCI::release_resources(_pos);
+    Threads::clear();
     // 2. Tear down worker threads: this is crucial
     //Threads.set(0);   // 0 threads → kill thread pool in Stockfish
     //g_stockfishInitialized = false;
